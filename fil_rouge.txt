@@ -1,0 +1,20 @@
+Problématique : Quelles sont les liaisons les plus sujettes au retard ?
+
+1er niveau (carte de France) :
+ - pourcentage de retards en gare d'arrivée dans 4 zones : {N-O, N-E, S-O, S-E}
+ - une arête par zone, couleur de l'arrête selon ce pourcentage
+ 
+==> Est-ce que cette différence entre zones se retrouvent au niveau des saisons ?
+
+
+2eme niveau (diagramme en barres) :
+ - pourcentage [moyen?] de retards par zone : {N-O, N-E, S-O, S-E}
+ - regroupement des mois en 4 saisons : {Printemps, Été, Automne, Hiver}
+										{2-4, 5-7, 8-10, 11-1}
+On obtient donc (4x4) barres (en x les saisons, en couleur les zones)
+
+
+3eme niveau (4 diagrammes) :
+	Pour chaque diagramme/motif de retard :
+     - pourcentage de retards par zone
+	 - puis par mois
