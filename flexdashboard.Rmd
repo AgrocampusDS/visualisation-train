@@ -16,23 +16,23 @@ params:
 
 <style>                     
 .navbar {
-  background-color: #0088CE;
-  border-color: #0088CE;
+background-color: #0088CE;
+border-color: #0088CE;
 }
 .navbar-brand {
 color: white!important;
 }
 
 .fa {
-  color: white;
+color: white;
 }
 
 .navbar-inverse .navbar-nav > li > a {
-    color: white;
+color: white;
 }
 
 .navbar-inverse .navbar-nav > li > a:hover {
-    color: white;
+color: white;
 }
 
 
@@ -41,6 +41,7 @@ color: white!important;
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+library(sf)
 library(flexdashboard)
 library(readr)
 library(tidyverse)
@@ -94,53 +95,125 @@ Column {.tabset .tabset-fade}
 ### Carte centralisée des liaisons par zone
 
 ```{r map, echo=FALSE, message=FALSE, warning=FALSE}
+
+# liaison map
+# edges: liaisons
+
 e_train <- train %>% select(`Departure station`, `Arrival station`,
-                            `Number of expected circulations`) %>% 
+                            `Number of expected circulations`,`Number of cancelled trains`,`Number of trains late on arrival`,`Number of late trains at departure`) %>% 
   rename(Dep = `Departure station`, Arr = `Arrival station`) %>% 
   group_by(Dep, Arr) %>% 
-  summarise(Nb = sum(`Number of expected circulations`, na.rm = TRUE))
-
-# nodes: stations
-y_train <- as.data.frame(coord) %>% filter(`Departure station` %in% e_train$Dep |
-                              `Departure station` %in% e_train$Arr) %>% 
-  rename(Station = `Departure station`)
-
-test <- map_data("world") %>% 
-  filter(region %in% c("France", "Belgium", "Luxembourg", "Germany", "Spain", "Portugal", "Switzerland", "Italy"))
+  summarise(Nb = sum(`Number of expected circulations`-`Number of cancelled trains`, na.rm = TRUE), Nb_Delay = sum(`Number of trains late on arrival`,na.rm=TRUE), Nb_Delay_dep = sum(`Number of late trains at departure`), na.rm = TRUE)
 
 e_train <- e_train %>% 
   filter(str_detect(Dep,"PARIS")|str_detect(Arr,"PARIS"))
 
-# convert to network
-sens <- network(e_train, directed = TRUE,loops = TRUE)
+e_trajet <- read_delim("data/e_trajet.csv", delim = ";", 
+                       escape_double = FALSE, trim_ws = TRUE)
 
-rownames(y_train) <- y_train$Station
+e_train <- as.data.frame(c(e_train, e_trajet[,4:5]))
 
-# add geographic coordinates
-sens %v% "lat" <- y_train[network.vertex.names(sens),"Latitude"]
-sens %v% "lon" <- y_train[network.vertex.names(sens),"Longitude"]
+Trajet_df <- e_train %>% 
+  group_by(Trajet.A,Trajet.B) %>% summarise(retard = sum(Nb), Delay = sum(Nb_Delay), Delay_dep = sum(Nb_Delay_dep))
 
-# drop isolated airports
-delete.vertices(sens, which(degree(sens) < 2))
+# nodes: stations
+nodes_train <- coord %>% filter(`Departure station` %in% e_train$Dep |
+                                  `Departure station` %in% e_train$Arr) %>% 
+  rename(Station = `Departure station`)
 
-# compute degree centrality
-sens %v% "degree" <- degree(sens, gmode = "graph")
 
-# add random groups
-sens %v% "mygroup" <- y_train[network.vertex.names(sens),"Direction"]
+for (i in 1:nrow(Trajet_df)){
+  for (j in 1:nrow(nodes_train)){
+    if (Trajet_df$Trajet.B[i] == nodes_train$Station[j]){
+      Trajet_df$Direction[i] <- nodes_train$Direction[j] 
+    }
+  }
+}
 
-# create a map of the USA
-europa <- ggplot(test, aes(x = long, y = lat)) +
-  geom_polygon(aes(group = group), color = "grey65",
-               fill = "#f9f9f9", size = 0.2) +  
-  coord_map(xlim = c(-5, 10.5),ylim = c(40, 51))
+retard <- Trajet_df %>% group_by(Direction) %>% 
+  summarise(Total = sum(retard), Delay = sum(Delay),Delay_dep = sum(Delay_dep))
 
-# overlay network data to map
-map <- ggnetworkmap(europa, net = sens, size = 10, great.circles = TRUE,
-             segment.color = "steelblue", arrow.size = 0,
-             node.group = mygroup, alpha = 1,
-             ring.group = degree, weight = degree, legend)
-map
+
+Fleches <- read_delim("data/Fleches.csv", delim = ";", 
+                      escape_double = FALSE, trim_ws = TRUE)
+
+Cardinaux <- cbind(retard,Fleches)
+
+Cardinaux$Percent <- (Cardinaux$Delay/Cardinaux$Total)*100
+Cardinaux$Percent_dep <- (Cardinaux$Delay_dep/Cardinaux$Total)*100
+Paris <- c("PARIS",sum(Cardinaux$Total),sum(Cardinaux$Delay),sum(Cardinaux$Delay_dep),"PARIS",	2.3522219, 	48.856614, (sum(Cardinaux$Delay)/sum(Cardinaux$Total))*100, (sum(Cardinaux$Delay_dep)/sum(Cardinaux$Total))*100)
+Paris <- t(as.data.frame(Paris))
+colnames(Paris) <- colnames(Cardinaux)
+
+Final_train <- rbind(Cardinaux, Paris)
+rownames(Final_train) <- Final_train$Direction 
+Final_train$Total <- as.numeric(Final_train$Total)
+Final_train$Delay <- as.numeric(Final_train$Delay)
+Final_train$Delay_dep <- as.numeric(Final_train$Delay_dep)
+Final_train$Longitude <- as.numeric(Final_train$Longitude)
+Final_train$Latitude <- as.numeric(Final_train$Latitude)
+Final_train$Percent <- as.numeric(Final_train$Percent)
+Final_train$Percent_dep <- as.numeric(Final_train$Percent_dep)
+
+dpt_shape <-  st_read(dsn = 'depts',quiet = TRUE)
+
+dpt_shape %>%
+  select(CODE_DEPT, NOM_DEPT, NOM_REGION) %>%
+  group_by(NOM_REGION) %>%
+  summarise(geometry= st_union(geometry)) %>% st_as_sf() ->
+  region
+
+
+
+region_dir <- read_delim("data/region.csv", delim = ";", 
+                         escape_double = FALSE, trim_ws = TRUE)
+colnames(region_dir) <- c("NOM_REGION","Localisation")
+
+region_uni <- cbind(region,region_dir)
+region_uni <- region_uni[,-2]
+
+region_uni <- region_uni[-9,] #Retrait de la corse
+
+region_uni %>% 
+  group_by(Localisation) %>% 
+  summarise(geometry = st_union(geometry)) %>% st_as_sf() -> 
+  Delimitation
+
+Delimitation$geometry <- (Delimitation$geometry / 1000000)
+
+Delimitation <- sf::st_cast(Delimitation, "MULTIPOLYGON")
+
+color_point <- c("#440154FF","#31688EFF","grey","#35B779FF","#FDE725FF")
+
+carte <- ggplot() + geom_sf(aes(fill = Delimitation$Localisation, geometry = Delimitation$geometry)) + scale_fill_manual(values = color_point, guide = "none")
+
+Final_train$Latitude <- c(6.8,6.8,6.4,6.4,6.85)
+Final_train$Longitude <- c(0.9,0.5,0.9,0.5,0.65)
+
+Depart <- carte + 
+  geom_segment(aes(x = Final_train$Longitude[5], xend = Final_train$Longitude[-5], y = Final_train$Latitude[5], yend = Final_train$Latitude[-5], size = Final_train$Total[-5], color = Final_train$Percent_dep[-5]), lineend = "round", inherit.aes = FALSE, arrow = arrow(angle = 50)) +
+  scale_size(range = c(1,5))+
+  labs(color = "Trains en retard au départ (en %)") +
+  scale_color_gradient("Trains en retard au départ (en %)", high = "darkblue", low = "cyan")  +
+  theme(panel.background = element_blank(), #On enlève le fond
+        axis.title = element_blank(), #On enlève le titre des axes
+        axis.ticks = element_blank(), #On enlève les graduations
+        axis.text = element_blank()) +#On enlève le texte des axes 
+  geom_text(aes(x = Final_train$Longitude, y = Final_train$Latitude) ,label = rownames(Final_train), nudge_x = 0, nudge_y = c(-0.05,-0.05,-0.03,-0.03,0.02), fontface = 2, color = c("white","white","black","black","black"))
+
+Depart
+
+Arrivee <- carte + 
+  geom_segment(aes(x = Final_train$Longitude[5], xend = Final_train$Longitude[-5], y = Final_train$Latitude[5], yend = Final_train$Latitude[-5], size = Final_train$Total[-5], color = Final_train$Percent[-5]), lineend = "round", inherit.aes = FALSE, arrow = arrow(angle = 50)) +
+  scale_size(range = c(1,5), guide = "none")+
+  labs(color = "Trains en retard à l'arrivée (en %)") +
+  scale_color_gradient("Trains en retard à l'arrivée (en %)", high = "darkblue", low = "cyan")  +
+  theme(panel.background = element_blank(), #On enlève le fond
+        axis.title = element_blank(), #On enlève le titre des axes
+        axis.ticks = element_blank(), #On enlève les graduations
+        axis.text = element_blank()) +#On enlève le texte des axes 
+  geom_text(aes(x = Final_train$Longitude, y = Final_train$Latitude) ,label = rownames(Final_train), nudge_x = 0, nudge_y = c(-0.05,-0.05,-0.03,-0.03,0.02), fontface = 2, color = c("white","white","black","black","black"))
+
 ```
 
 
@@ -214,7 +287,7 @@ df_graph2 <- train %>%
   summarise(Retards = sum(value, na.rm = TRUE)) %>% 
   left_join(df_retards, by = c("Season", "Direction")) %>% 
   mutate(Perc_retard = Retards/Nb_retards)
-  
+
 ggp2 <- df_graph2 %>% 
   # diagramme en barres
   ggplot() + aes(x = Season, y = Perc_retard*100, fill = tolower(Direction)) +
