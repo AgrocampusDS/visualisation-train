@@ -68,17 +68,26 @@ liaisons_occasional <- train %>%
 
 
 # Évolution saisonnière des retards
-train %>% 
+df_dep <- train %>% 
   filter(str_detect(`Departure station`, "PARIS")) %>% 
   left_join(coord, by = c("Arrival station" = "Departure station")) %>% 
   group_by(Season, Direction) %>% 
-  summarise(Retards = mean(Percent_trains_late, na.rm = TRUE)) %>%
+  summarise(Retards = mean(Percent_trains_late_dep, na.rm = TRUE))
+df_arr <- train %>% 
+  filter(str_detect(`Departure station`, "PARIS")) %>% 
+  left_join(coord, by = c("Arrival station" = "Departure station")) %>% 
+  group_by(Season, Direction) %>% 
+  summarise(Retards = mean(Percent_trains_late_arr, na.rm = TRUE))
+df_dep_arr <- rbind(df_dep, df_arr)
+df_dep_arr$Gare <- as.factor(c(rep("En gare de départ", 16), rep("En gare d'arrivée", 16)))
+
+df_dep_arr %>% 
   # diagramme en barres
   ggplot() + aes(x = Season, y = Retards*100, fill = tolower(Direction)) +
   geom_bar(stat = "identity", position='dodge', width = 0.5) +
   scale_x_discrete(labels = season.name.fr) +
   ylab(element_blank()) + xlab(element_blank()) +
-  labs(title = "Trains en retard à la gare d'arrivée (en %)",
+  labs(title = "Trains en retard (en %)",
        caption = "Période : janvier 2015 à juin 2020") +
   theme(plot.title = element_text(size = 12, face = "bold.italic", hjust = 0.5),
         plot.caption = element_text(size = 8, face = "italic", hjust = 1),
@@ -90,7 +99,11 @@ train %>%
         panel.grid.major.x = element_blank(),
         axis.ticks.x = element_blank()) +
   # scale_fill_brewer(palette="Paired")  # colorblind -friendly palette
-  scale_fill_brewer(palette="Dark2")
+  # scale_fill_brewer(palette="Dark2)
+  scale_fill_viridis(discrete=TRUE) +
+  facet_wrap(~Gare, nrow = 2, strip.position = "right")
+
+
 
 
 # nombre de trajets par direction
