@@ -114,30 +114,30 @@ train %>%
   summarise(Nb_liaisons = n())
 
 
-# # Évolution saisonnière des retards selon leur motif
-# train %>% 
-#   filter(str_detect(`Departure station`, "PARIS")) %>% 
-#   mutate(`Nb trains external causes` = `Number of trains late on arrival`)
-#   left_join(coord, by = c("Arrival station" = "Departure station")) %>% 
-#   group_by(Season, Direction) %>% 
-#   summarise(Retards = mean(Percent_trains_late, na.rm = TRUE)) %>%
-#   # diagramme en barres
-#   ggplot() + aes(x = Season, y = Retards*100, fill = tolower(Direction)) +
-#   geom_bar(stat = "identity", position='dodge', width = 0.5) +
-#   # scale_colour_colorblind() +
-#   scale_x_discrete(labels = season.name.fr) +
-#   ylab(element_blank()) + xlab(element_blank()) +
-#   labs(title = "Trains en retards à la gare d'arrivée (en %)",
-#        caption = "Période : janvier 2015 à juin 2020") +
-#   theme(plot.title = element_text(size = 12, face = "bold.italic", hjust = 0.5),
-#         plot.caption = element_text(size = 8, face = "italic", hjust = 1),
-#         legend.position = "bottom",
-#         legend.title = element_blank(),
-#         axis.text.x = element_text(vjust = 0.5),
-#         panel.background = element_rect(fill = "white"),
-#         panel.grid = element_line(color = 'grey', linetype = 'dotted'),
-#         panel.grid.major.x = element_blank(),
-#         axis.ticks.x = element_blank())
+# Évolution saisonnière des retards selon leur motif
+train %>%
+  filter(str_detect(`Departure station`, "PARIS")) %>%
+  mutate(`Nb trains external causes` = `Number of trains late on arrival`)
+  left_join(coord, by = c("Arrival station" = "Departure station")) %>%
+  group_by(Season, Direction) %>%
+  summarise(Retards = mean(Percent_trains_late, na.rm = TRUE)) %>%
+  # diagramme en barres
+  ggplot() + aes(x = Season, y = Retards*100, fill = tolower(Direction)) +
+  geom_bar(stat = "identity", position='dodge', width = 0.5) +
+  # scale_colour_colorblind() +
+  scale_x_discrete(labels = season.name.fr) +
+  ylab(element_blank()) + xlab(element_blank()) +
+  labs(title = "Trains en retards à la gare d'arrivée (en %)",
+       caption = "Période : janvier 2015 à juin 2020") +
+  theme(plot.title = element_text(size = 12, face = "bold.italic", hjust = 0.5),
+        plot.caption = element_text(size = 8, face = "italic", hjust = 1),
+        legend.position = "bottom",
+        legend.title = element_blank(),
+        axis.text.x = element_text(vjust = 0.5),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(color = 'grey', linetype = 'dotted'),
+        panel.grid.major.x = element_blank(),
+        axis.ticks.x = element_blank())
 
 
 # # Évolution mensuelle des retards

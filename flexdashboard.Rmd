@@ -40,26 +40,20 @@ color: white!important;
 
 
 ```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 library(flexdashboard)
 library(readr)
 library(tidyverse)
-library(ggplot2)
 library(plotly)
+library(maps)
+library(geosphere)
+library(mapproj)
+library(sp)
+library(sna)
+library(GGally)
 ```
 
-Column {data-width=650}
------------------------------------------------------------------------
 
-### An easy solution for dashboard
-
-```{r, echo = TRUE}
-#install.package('flexdasboard')
-#rmarkdown::draft("dashboard.Rmd", template = "flex_dashboard", package = "flexdashboard")
-```
-
-The [flexdashboard website](https://rmarkdown.rstudio.com/flexdashboard/index.html) provides multiple advanced examples.
-
-### Évolution saisonnière des retards
 
 ```{r data, eval = TRUE, echo = FALSE, results='hide', message = FALSE, warning=FALSE}
 train <- read_csv("data/Regularities_by_liaisons_Trains_France.csv")
@@ -93,7 +87,72 @@ season.name.fr <- c("Printemps", "Été", "Automne", "Hiver")
 ```
 
 
-```{r graph_static,  echo = FALSE,  message = FALSE, warning=FALSE}
+Column {.tabset .tabset-fade}
+-----------------------------------------------------------------------
+
+L'objectif de ce tableau de bord est d'identifier les zones les plus sujettes au retard des TGV afin de comprendre les raisons de ces différences inter-zone. Ces zones sont les destinations au départ de Paris, point central de la France jacobine acutelle.
+
+
+### Carte centralisée des liaisons par zone
+
+```{r map, echo=FALSE, message=FALSE, warning=FALSE}
+e_train <- train %>% select(`Departure station`, `Arrival station`,
+                            `Number of expected circulations`) %>% 
+  rename(Dep = `Departure station`, Arr = `Arrival station`) %>% 
+  group_by(Dep, Arr) %>% 
+  summarise(Nb = sum(`Number of expected circulations`, na.rm = TRUE))
+
+# nodes: stations
+y_train <- as.data.frame(coord) %>% filter(`Departure station` %in% e_train$Dep |
+                              `Departure station` %in% e_train$Arr) %>% 
+  rename(Station = `Departure station`)
+
+test <- map_data("world") %>% 
+  filter(region %in% c("France", "Belgium", "Luxembourg", "Germany", "Spain", "Portugal", "Switzerland", "Italy"))
+
+e_train <- e_train %>% 
+  filter(str_detect(Dep,"PARIS")|str_detect(Arr,"PARIS"))
+
+# convert to network
+sens <- network(e_train, directed = TRUE,loops = TRUE)
+
+rownames(y_train) <- y_train$Station
+
+# add geographic coordinates
+sens %v% "lat" <- y_train[network.vertex.names(sens),"Latitude"]
+sens %v% "lon" <- y_train[network.vertex.names(sens),"Longitude"]
+
+# drop isolated airports
+delete.vertices(sens, which(degree(sens) < 2))
+
+# compute degree centrality
+sens %v% "degree" <- degree(sens, gmode = "graph")
+
+# add random groups
+sens %v% "mygroup" <- y_train[network.vertex.names(sens),"Direction"]
+
+# create a map of the USA
+europa <- ggplot(test, aes(x = long, y = lat)) +
+  geom_polygon(aes(group = group), color = "grey65",
+               fill = "#f9f9f9", size = 0.2) +  
+  coord_map(xlim = c(-5, 10.5),ylim = c(40, 51))
+
+# overlay network data to map
+map <- ggnetworkmap(europa, net = sens, size = 10, great.circles = TRUE,
+             segment.color = "steelblue", arrow.size = 0,
+             node.group = mygroup, alpha = 1,
+             ring.group = degree, weight = degree, legend)
+map
+```
+
+
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Évolution saisonnière des retards
+
+```{r graph1, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4, fig.width=9}
 # Évolution saisonnière des retards
 ggp1 <- train %>% 
   filter(str_detect(`Departure station`, "PARIS")) %>% 
@@ -122,19 +181,8 @@ ggp1 <- train %>%
 ggp1
 ```
 
-Column {.tabset .tabset-fade}
------------------------------------------------------------------------
 
-
-### Some dynamic maps
-
-```{r  ggplotly, echo = TRUE,  eval = TRUE,  message = FALSE, warning=FALSE}
-plotly::ggplotly(ggp1)
-```
-
-
-
-### Chart C
+### Évolution saisonnière des motfis de retard
 
 ```{r}
 
