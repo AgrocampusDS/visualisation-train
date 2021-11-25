@@ -44,18 +44,18 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 library(flexdashboard)
 library(readr)
 library(tidyverse)
-library(plotly)
+library(GGally)
 library(maps)
 library(geosphere)
 library(mapproj)
 library(sp)
 library(sna)
-library(GGally)
+library(viridis)
 ```
 
 
 
-```{r data, eval = TRUE, echo = FALSE, results='hide', message = FALSE, warning=FALSE}
+```{r data, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
 train <- read_csv("data/Regularities_by_liaisons_Trains_France.csv")
 coord <- read_delim("data/Coordonnees.csv", delim = ";", escape_double = FALSE,
                     trim_ws = TRUE)
@@ -174,7 +174,8 @@ ggp1 <- train %>%
         panel.grid.major.x = element_blank(),
         axis.ticks.x = element_blank()) +
   # scale_fill_brewer(palette="Paired")  # colorblind -friendly palette
-  scale_fill_brewer(palette="Dark2")
+  # scale_fill_brewer(palette="Dark2)
+  scale_fill_viridis(discrete=TRUE)
 ggp1
 ```
 
@@ -231,7 +232,7 @@ ggp2 <- df_graph2 %>%
         panel.grid = element_line(color = 'grey', linetype = 'dotted'),
         panel.grid.major.x = element_blank(),
         axis.ticks.x = element_blank()) +
-  scale_fill_brewer(palette="Dark2") +
+  scale_fill_viridis(discrete=TRUE) +
   facet_wrap(~Motif, scales = "fixed")
 ggp2
 ```

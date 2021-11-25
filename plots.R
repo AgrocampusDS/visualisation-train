@@ -1,9 +1,6 @@
 # package loading
 library(readr)
 library(tidyverse)
-# library(sf)
-# library(lubridate)
-# library(plotly)
 
 # data processing
 train <- read_csv("data/Regularities_by_liaisons_Trains_France.csv")
