@@ -65,7 +65,9 @@ train <- train %>%
   mutate(
     Nb_circulations = `Number of expected circulations`-`Number of cancelled trains`,
     # % of late trains (on arrival)
-    Percent_trains_late = `Number of trains late on arrival`/Nb_circulations,
+    Percent_trains_late_arr = `Number of trains late on arrival`/Nb_circulations,
+    # % of late trains (at departure)
+    Percent_trains_late_dep = `Number of late trains at departure`/Nb_circulations,
     # Season from month
     Season = case_when(Month %in% 2:4 ~ "A",
                        Month %in% 5:7 ~ "B",
@@ -88,11 +90,10 @@ season.name.fr <- c("Printemps", "Été", "Automne", "Hiver")
 
 L'objectif de ce tableau de bord est d'identifier les zones les plus sujettes au retard des TGV afin de comprendre les raisons de ces différences inter-zone. Ces zones sont les destinations au départ de Paris, point central de la France jacobine acutelle.
 
-Column {.tabset .tabset-fade}
+Column 
 -----------------------------------------------------------------------
 
-### Carte centralisée des liaisons par zone
-
+### En gare de départ...
 ```{r map, echo=FALSE, message=FALSE, warning=FALSE}
 e_train <- train %>% select(`Departure station`, `Arrival station`,
                             `Number of expected circulations`) %>% 
@@ -143,20 +144,21 @@ map <- ggnetworkmap(europa, net = sens, size = 10, great.circles = TRUE,
 map
 ```
 
+### En gare d'arrivée...
 
+Column {data-width=500}
+-----------------------------------------------------------------------
 
-<!-- Column {data-width=500} -->
-<!-- ----------------------------------------------------------------------- -->
+Évolution saisonnière des retards
 
-### Évolution saisonnière des retards
-
-```{r graph1, echo=FALSE, fig.height=4, fig.width=9, message=FALSE, warning=FALSE}
+### En gare d'arrivée...
+```{r graph1a, echo=FALSE, fig.height=4, fig.width=9, message=FALSE, warning=FALSE}
 # Évolution saisonnière des retards
-ggp1 <- train %>% 
+ggp1a <- train %>% 
   filter(str_detect(`Departure station`, "PARIS")) %>% 
   left_join(coord, by = c("Arrival station" = "Departure station")) %>% 
   group_by(Season, Direction) %>% 
-  summarise(Retards = mean(Percent_trains_late, na.rm = TRUE)) %>%
+  summarise(Retards = mean(Percent_trains_late_arr, na.rm = TRUE)) %>%
   # diagramme en barres
   ggplot() + aes(x = Season, y = Retards*100, fill = tolower(Direction)) +
   geom_bar(stat = "identity", position='dodge', width = 0.5) +
@@ -176,11 +178,41 @@ ggp1 <- train %>%
   # scale_fill_brewer(palette="Paired")  # colorblind -friendly palette
   # scale_fill_brewer(palette="Dark2)
   scale_fill_viridis(discrete=TRUE)
-ggp1
+ggp1a
+```
+
+### En gare de départ...
+```{r graph1b, echo=FALSE, fig.height=4, fig.width=9, message=FALSE, warning=FALSE}
+# Évolution saisonnière des retards
+ggp1b <- train %>% 
+  filter(str_detect(`Departure station`, "PARIS")) %>% 
+  left_join(coord, by = c("Arrival station" = "Departure station")) %>% 
+  group_by(Season, Direction) %>% 
+  summarise(Retards = mean(Percent_trains_late_dep, na.rm = TRUE)) %>%
+  # diagramme en barres
+  ggplot() + aes(x = Season, y = Retards*100, fill = tolower(Direction)) +
+  geom_bar(stat = "identity", position='dodge', width = 0.5) +
+  scale_x_discrete(labels = season.name.fr) +
+  ylab(element_blank()) + xlab(element_blank()) +
+  labs(title = "Trains en retard à la gare d'arrivée (en %)",
+       caption = "Période : janvier 2015 à juin 2020") +
+  theme(plot.title = element_text(size = 12, face = "bold.italic", hjust = 0.5),
+        plot.caption = element_text(size = 8, face = "italic", hjust = 1),
+        legend.position = "bottom",
+        legend.title = element_blank(),
+        axis.text.x = element_text(vjust = 0.5),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(color = 'grey', linetype = 'dotted'),
+        panel.grid.major.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  # scale_fill_brewer(palette="Paired")  # colorblind -friendly palette
+  # scale_fill_brewer(palette="Dark2)
+  scale_fill_viridis(discrete=TRUE)
+ggp1b
 ```
 
 
-### Évolution saisonnière des motfis de retard
+Évolution saisonnière des motfis de retard
 
 ```{r graph2, echo=FALSE, fig.height=4, fig.width=9, message=FALSE, warning=FALSE}
 # Évolution saisonnière des retards selon leur motif
@@ -222,7 +254,7 @@ ggp2 <- df_graph2 %>%
   scale_x_discrete(labels = season.name.fr) +
   # scale_y_continuous(labels = c(0, 100, 200, 300)) +
   ylab(element_blank()) + xlab(element_blank()) +
-  labs(title = "Trains en retard à la gare d'arrivée selon la cause le motif (en %)",
+  labs(title = "Causes des retards (en %)",
        caption = "Période : janvier 2015 à juin 2020") +
   theme(plot.title = element_text(size = 12, face = "bold.italic", hjust = 0.5),
         plot.caption = element_text(size = 8, face = "italic", hjust = 1),
