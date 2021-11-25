@@ -184,12 +184,13 @@ ggp1
 
 ```{r graph2, echo=FALSE, fig.height=4, fig.width=9, message=FALSE, warning=FALSE}
 # Évolution saisonnière des retards selon leur motif
-df_circu <- train %>%
+df_retards <- train %>%
   filter(str_detect(`Departure station`, "PARIS")) %>%
   left_join(coord, by = c("Arrival station" = "Departure station")) %>%
-  select(`Arrival station`, Season, Direction, Nb_circulations) %>% 
+  select(`Arrival station`, Season, Direction,
+         `Number of late trains at departure`, `Number of trains late on arrival`) %>% 
   group_by(Season, Direction) %>% 
-  summarise(Nb_trajets = sum(Nb_circulations, na.rm = TRUE))
+  summarise(Nb_retards = sum(`Number of trains late on arrival`, na.rm = TRUE))
 
 df_graph2 <- train %>%
   filter(str_detect(`Departure station`, "PARIS")) %>%
@@ -211,8 +212,8 @@ df_graph2 <- train %>%
                            name=="Nb_late_passengers"~"Prise en compte voyageurs")) %>% 
   group_by(Season, Direction, Motif) %>% 
   summarise(Retards = sum(value, na.rm = TRUE)) %>% 
-  left_join(df_circu, by = c("Season", "Direction")) %>% 
-  mutate(Perc_retard = Retards/Nb_trajets)
+  left_join(df_retards, by = c("Season", "Direction")) %>% 
+  mutate(Perc_retard = Retards/Nb_retards)
   
 ggp2 <- df_graph2 %>% 
   # diagramme en barres
@@ -221,7 +222,7 @@ ggp2 <- df_graph2 %>%
   scale_x_discrete(labels = season.name.fr) +
   # scale_y_continuous(labels = c(0, 100, 200, 300)) +
   ylab(element_blank()) + xlab(element_blank()) +
-  labs(title = "Trains en retard à la gare d'arrivée selon leur motif (en %)",
+  labs(title = "Trains en retard à la gare d'arrivée selon la cause le motif (en %)",
        caption = "Période : janvier 2015 à juin 2020") +
   theme(plot.title = element_text(size = 12, face = "bold.italic", hjust = 0.5),
         plot.caption = element_text(size = 8, face = "italic", hjust = 1),
