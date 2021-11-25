@@ -1,9 +1,6 @@
 # package loading
 library(readr)
 library(tidyverse)
-# library(sf)
-# library(lubridate)
-# library(plotly)
 
 # data processing
 train <- read_csv("data/Regularities_by_liaisons_Trains_France.csv")
@@ -13,14 +10,14 @@ coord <- read_delim("data/Coordonnees.csv", delim = ";", escape_double = FALSE,
 # add  a d season fields
 train <- train %>% 
   mutate(
+    Nb_circulations = `Number of expected circulations`-`Number of cancelled trains`,
     # % of late trains (on arrival)
-    Percent_trains_late = `Number of trains late on arrival`/
-           (`Number of expected circulations`-`Number of cancelled trains`),
+    Percent_trains_late = `Number of trains late on arrival`/Nb_circulations,
     # Season from month
     Season = case_when(Month %in% 2:4 ~ "A",
-                            Month %in% 5:7 ~ "B",
-                            Month %in% 8:10 ~ "C",
-                            Month %in% c(11, 12, 1) ~ "D"),
+                       Month %in% 5:7 ~ "B",
+                       Month %in% 8:10 ~ "C",
+                       Month %in% c(11, 12, 1) ~ "D"),
     # Number of late trains on arrival by reason
     Nb_late_external_causes = `Number of trains late on arrival`*`% trains late due to external causes (weather, obstacles, suspicious packages, malevolence, social movements, etc.)`,
     Nb_late_infrastructure = `Number of trains late on arrival`*`% trains late due to railway infrastructure (maintenance, works)`,
@@ -79,10 +76,9 @@ train %>%
   # diagramme en barres
   ggplot() + aes(x = Season, y = Retards*100, fill = tolower(Direction)) +
   geom_bar(stat = "identity", position='dodge', width = 0.5) +
-  # scale_colour_colorblind() +
   scale_x_discrete(labels = season.name.fr) +
   ylab(element_blank()) + xlab(element_blank()) +
-  labs(title = "Trains en retards à la gare d'arrivée (en %)",
+  labs(title = "Trains en retard à la gare d'arrivée (en %)",
        caption = "Période : janvier 2015 à juin 2020") +
   theme(plot.title = element_text(size = 12, face = "bold.italic", hjust = 0.5),
         plot.caption = element_text(size = 8, face = "italic", hjust = 1),
@@ -93,8 +89,8 @@ train %>%
         panel.grid = element_line(color = 'grey', linetype = 'dotted'),
         panel.grid.major.x = element_blank(),
         axis.ticks.x = element_blank()) +
-  scale_fill_brewer(palette="Paired")  # colorblind -friendly palette
-  # scale_fill_brewer(palette="Dark2")
+  # scale_fill_brewer(palette="Paired")  # colorblind -friendly palette
+  scale_fill_brewer(palette="Dark2")
 
 
 # nombre de trajets par direction
@@ -102,32 +98,49 @@ train %>%
   filter(str_detect(`Departure station`, "PARIS")) %>% 
   left_join(coord, by = c("Arrival station" = "Departure station")) %>% 
   group_by(Direction) %>% 
-  summarise(Nb_trajets = sum(
-    `Number of expected circulations`-`Number of cancelled trains`,
-    na.rm = TRUE))
+  summarise(Nb_trajets = sum(Nb_circulations, na.rm = TRUE))
 
-# nombre de liaisons par direction
-train %>% 
-  filter(str_detect(`Departure station`, "PARIS")) %>% 
-  left_join(coord, by = c("Arrival station" = "Departure station")) %>% 
-  group_by(Direction) %>% 
-  summarise(Nb_liaisons = n())
 
 
 # Évolution saisonnière des retards selon leur motif
-train %>%
+df_circu <- train %>%
   filter(str_detect(`Departure station`, "PARIS")) %>%
-  mutate(`Nb trains external causes` = `Number of trains late on arrival`)
   left_join(coord, by = c("Arrival station" = "Departure station")) %>%
-  group_by(Season, Direction) %>%
-  summarise(Retards = mean(Percent_trains_late, na.rm = TRUE)) %>%
+  select(`Arrival station`, Season, Direction, Nb_circulations) %>% 
+  group_by(Season, Direction) %>% 
+  summarise(Nb_trajets = sum(Nb_circulations, na.rm = TRUE))
+
+df_graph2 <- train %>%
+  filter(str_detect(`Departure station`, "PARIS")) %>%
+  left_join(coord, by = c("Arrival station" = "Departure station")) %>%
+  select(`Arrival station`, Season, Direction,
+         Nb_late_external_causes,
+         Nb_late_infrastructure,
+         Nb_late_traffic_mgmt,
+         Nb_late_rolling_stock,
+         Nb_late_station_mgmt,
+         Nb_late_passengers) %>% 
+  # pivot dataframe to switch causes from 6 columns to 6 row per individual
+  pivot_longer(cols = -c(`Arrival station`, Season, Direction)) %>% 
+  mutate(Motif = case_when(name=="Nb_late_external_causes"~"Causes extérieures",
+                           name=="Nb_late_infrastructure"~"Infrastructure (maintenance, travaux)",
+                           name=="Nb_late_traffic_mgmt"~"Gestion du trafic (voie ferrée)",
+                           name=="Nb_late_rolling_stock"~"Matériel roulant",
+                           name=="Nb_late_station_mgmt"~"Gestion en gare, réutilisation de matériel",
+                           name=="Nb_late_passengers"~"Prise en compte voyageurs")) %>% 
+  group_by(Season, Direction, Motif) %>% 
+  summarise(Retards = sum(value, na.rm = TRUE)) %>% 
+  left_join(df_circu, by = c("Season", "Direction")) %>% 
+  mutate(Perc_retard = Retards/Nb_trajets)
+  
+df_graph2 %>% 
   # diagramme en barres
-  ggplot() + aes(x = Season, y = Retards*100, fill = tolower(Direction)) +
+  ggplot() + aes(x = Season, y = Perc_retard*100, fill = tolower(Direction)) +
   geom_bar(stat = "identity", position='dodge', width = 0.5) +
-  # scale_colour_colorblind() +
   scale_x_discrete(labels = season.name.fr) +
+  # scale_y_continuous(labels = c(0, 100, 200, 300)) +
   ylab(element_blank()) + xlab(element_blank()) +
-  labs(title = "Trains en retards à la gare d'arrivée (en %)",
+  labs(title = "Trains en retard selon le motif (en %)",
        caption = "Période : janvier 2015 à juin 2020") +
   theme(plot.title = element_text(size = 12, face = "bold.italic", hjust = 0.5),
         plot.caption = element_text(size = 8, face = "italic", hjust = 1),
@@ -137,7 +150,9 @@ train %>%
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = 'grey', linetype = 'dotted'),
         panel.grid.major.x = element_blank(),
-        axis.ticks.x = element_blank())
+        axis.ticks.x = element_blank()) +
+  scale_fill_brewer(palette="Dark2") +
+  facet_wrap(~Motif, scales = "fixed")
 
 
 # # Évolution mensuelle des retards
