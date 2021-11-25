@@ -23,6 +23,13 @@ border-color: #0088CE;
 color: white!important;
 }
 
+.navbar-inverse .navbar-nav > .active > a, .navbar-inverse .navbar-nav > .active > a:hover, .navbar-inverse .navbar-nav > .active > a:focus {
+    color: white;
+    background-color: #0088CE;
+    font-weight: bold;
+}
+
+
 .fa {
 color: white;
 }
@@ -89,7 +96,9 @@ season.name.fr <- c("Printemps", "Été", "Automne", "Hiver")
 
 ```
 
-L'objectif de ce tableau de bord est d'identifier les zones les plus sujettes au retard des TGV afin de comprendre les raisons de ces différences inter-zone. Ces zones sont les destinations au départ de Paris, point central de la France jacobine acutelle.
+# Tableau de bord
+
+L'objectif de ce tableau de bord est d'identifier les zones les plus sujettes au retard des TGV afin de comprendre les raisons de ces différences inter-zone. Ces zones sont les destinations au départ de Paris, point central de la France jacobine actuelle.
 
 Column {.tabset .tabset-fade}
 -----------------------------------------------------------------------
@@ -222,7 +231,7 @@ Arrivee <- carte +
 
 
 
-Column {data-width=500}
+Column {data-width=700}
 -----------------------------------------------------------------------
 
 ### Évolution saisonnière des retards {data-height=400}
@@ -325,4 +334,20 @@ ggp2 <- df_graph2 %>%
   facet_wrap(~Motif, scales = "fixed")
 ggp2
 ```
+
+# Annexe
+
+## Table des effectifs
+```{r echo=FALSE}
+train %>% 
+  filter(str_detect(`Departure station`, "PARIS")) %>%
+  left_join(coord, by = c("Arrival station" = "Departure station")) %>%
+  group_by(Direction) %>% 
+  summarise(`Nombre total de trains` = sum(Nb_circulations, na.rm = TRUE),
+            `Nombre de trains en retards à l'arrivée` = 
+              sum(`Number of trains late on arrival`, na.rm = TRUE),
+            `Nombre de trains en retards à l'arrivée` = 
+              sum(`Number of late trains at departure`, na.rm = TRUE))
+```
+
 
