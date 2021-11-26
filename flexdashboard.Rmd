@@ -200,8 +200,8 @@ Final_train$Latitude <- c(6.8,6.8,6.4,6.4,6.85)
 Final_train$Longitude <- c(0.9,0.5,0.9,0.5,0.65)
 
 Depart <- carte + 
-  geom_segment(aes(x = Final_train$Longitude[5], xend = Final_train$Longitude[-5], y = Final_train$Latitude[5], yend = Final_train$Latitude[-5], size = Final_train$Total[-5], color = Final_train$Percent_dep[-5]), lineend = "round", inherit.aes = FALSE, arrow = arrow(angle = 50)) +
-  scale_size_continuous(name = "Nombre total de trains", range = c(1,5), labels = c("200000 trains","300000 trains","400000 trains","500000 trains","600000 trains")) +
+  geom_segment(aes(x = Final_train$Longitude[5], xend = Final_train$Longitude[-5], y = Final_train$Latitude[5], yend = Final_train$Latitude[-5], size = Final_train$Total[-5], color = Final_train$Percent_dep[-5]), lineend = "round", inherit.aes = FALSE, arrow = arrow(angle = 40)) +
+  scale_size_continuous(name = "Nombre total de trains", range = c(1,5), labels = c("200000","300000","400000","500000","600000")) +
   labs(title = "Proportion de retard selon le secteur Géographique",color = "Trains en retard au départ (en %)", caption = "Période : janvier 2015 à juin 2020") +
   scale_color_gradient("Trains en retard au départ (en %)", high = "darkblue", low = "cyan")  +
   theme(panel.background = element_blank(), #On enlève le fond
@@ -227,8 +227,8 @@ Depart
 ### En gare d'arrivée...
 ```{r map2, echo=FALSE, message=FALSE, warning=FALSE}
 Arrivee <- carte + 
-  geom_segment(aes(x = Final_train$Longitude[5], xend = Final_train$Longitude[-5], y = Final_train$Latitude[5], yend = Final_train$Latitude[-5], size = Final_train$Total[-5], color = Final_train$Percent[-5]), lineend = "round", inherit.aes = FALSE, arrow = arrow(angle = 50)) +
-  scale_size_continuous(name = "Nombre total de trains", range = c(1,5), labels = c("200000 trains","300000 trains","400000 trains","500000 trains","600000 trains"))+
+  geom_segment(aes(x = Final_train$Longitude[5], xend = Final_train$Longitude[-5], y = Final_train$Latitude[5], yend = Final_train$Latitude[-5], size = Final_train$Total[-5], color = Final_train$Percent[-5]), lineend = "round", inherit.aes = FALSE, arrow = arrow(angle = 40)) +
+  scale_size_continuous(name = "Nombre total de trains", range = c(1,5), labels = c("200000","300000","400000","500000","600000"))+
   labs(title = "Proportion de retard selon le secteur Géographique", color = "Trains en retard à l'arrivée (en %)", caption = "Période : janvier 2015 à juin 2020" ) +
   scale_color_gradient("Trains en retard à l'arrivée (en %)", high = "darkblue", low = "cyan")  +
   theme(panel.background = element_blank(), #On enlève le fond
@@ -259,7 +259,7 @@ Column {data-width=700}
 ### Évolution saisonnière des retards {data-height=400}
 
 ####
-```{r graph1, fig.height=3.2, fig.width=9, echo=FALSE, message=FALSE, warning=FALSE}
+```{r graph1, fig.height=3.1, fig.width=9, echo=FALSE, message=FALSE, warning=FALSE}
 # Évolution saisonnière des retards
 df_dep <- train %>% 
   filter(str_detect(`Departure station`, "PARIS")) %>% 
@@ -301,7 +301,7 @@ ggp1
 
 
 ### Évolution saisonnière des motifs
-```{r graph2, fig.width = 9, echo=FALSE, message=FALSE, warning=FALSE}
+```{r graph2, fig.width = 9.5, echo=FALSE, message=FALSE, warning=FALSE}
 # Évolution saisonnière des retards selon leur motif
 df_retards <- train %>%
   filter(str_detect(`Departure station`, "PARIS")) %>%
