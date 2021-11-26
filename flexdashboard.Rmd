@@ -202,8 +202,8 @@ Final_train$Longitude <- c(0.9,0.5,0.9,0.5,0.65)
 Depart <- carte + 
   geom_segment(aes(x = Final_train$Longitude[5], xend = Final_train$Longitude[-5], y = Final_train$Latitude[5], yend = Final_train$Latitude[-5], size = Final_train$Total[-5], color = Final_train$Percent_dep[-5]), lineend = "round", inherit.aes = FALSE, arrow = arrow(angle = 40)) +
   scale_size_continuous(name = "Nombre total de trains", range = c(1,5), labels = c("200000","300000","400000","500000","600000")) +
-  labs(title = "Proportion de retard selon le secteur Géographique",color = "Trains en retard au départ (en %)", caption = "Période : janvier 2015 à juin 2020") +
-  scale_color_gradient("Trains en retard au départ (en %)", high = "darkblue", low = "cyan")  +
+  labs(title = "Proportion de retard selon la zone géographique",color = "Trains en retard au départ (en %)", caption = "Période : janvier 2015 à juin 2020") +
+  scale_color_gradient("Trains en retard au départ (en %)", high = "red", low = "orange")  +
   theme(panel.background = element_blank(), #On enlève le fond
         axis.title = element_blank(), #On enlève le titre des axes
         axis.ticks = element_blank(), #On enlève les graduations
@@ -229,8 +229,8 @@ Depart
 Arrivee <- carte + 
   geom_segment(aes(x = Final_train$Longitude[5], xend = Final_train$Longitude[-5], y = Final_train$Latitude[5], yend = Final_train$Latitude[-5], size = Final_train$Total[-5], color = Final_train$Percent[-5]), lineend = "round", inherit.aes = FALSE, arrow = arrow(angle = 40)) +
   scale_size_continuous(name = "Nombre total de trains", range = c(1,5), labels = c("200000","300000","400000","500000","600000"))+
-  labs(title = "Proportion de retard selon le secteur Géographique", color = "Trains en retard à l'arrivée (en %)", caption = "Période : janvier 2015 à juin 2020" ) +
-  scale_color_gradient("Trains en retard à l'arrivée (en %)", high = "darkblue", low = "cyan")  +
+  labs(title = "Proportion de retard selon la zone géographique", color = "Trains en retard à l'arrivée (en %)", caption = "Période : janvier 2015 à juin 2020" ) +
+  scale_color_gradient("Trains en retard à l'arrivée (en %)", high = "red", low = "orange")  +
   theme(panel.background = element_blank(), #On enlève le fond
         axis.title = element_blank(), #On enlève le titre des axes
         axis.ticks = element_blank(), #On enlève les graduations
