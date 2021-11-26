@@ -196,8 +196,8 @@ color_point <- c("#440154FF","#31688EFF","grey","#35B779FF","#FDE725FF")
 
 carte <- ggplot() + geom_sf(aes(fill = Delimitation$Localisation, geometry = Delimitation$geometry)) + scale_fill_manual(values = color_point, guide = "none")
 
-Final_train$Latitude <- c(6.8,6.8,6.4,6.4,6.85)
-Final_train$Longitude <- c(0.9,0.5,0.9,0.5,0.65)
+Final_train$Latitude <- c(6.8,6.7,6.4,6.4,6.85)
+Final_train$Longitude <- c(0.9,0.4,0.9,0.5,0.65)
 
 Depart <- carte + 
   geom_segment(aes(x = Final_train$Longitude[5], xend = Final_train$Longitude[-5], y = Final_train$Latitude[5], yend = Final_train$Latitude[-5], size = Final_train$Total[-5], color = Final_train$Percent_dep[-5]), lineend = "round", inherit.aes = FALSE, arrow = arrow(angle = 40)) +
@@ -218,7 +218,7 @@ Depart <- carte +
         plot.caption = element_text(size = 8, face = "italic", hjust = 1)) + 
   guides(size = guide_legend(keyheight = unit(1, "cm"), keywidth = unit(1, "cm"), ncol = 3, title.position = "left",
                              title.hjust = 0.5, label.position = "left", label.hjust = 0.5, hjust = 0.5)) +
-  geom_text(aes(x = Final_train$Longitude, y = Final_train$Latitude) ,label = rownames(Final_train), nudge_x = 0, nudge_y = c(-0.08,-0.08,-0.06,-0.06,0.08), fontface = 2, color = c("white","white","black","black","white"))
+  geom_text(aes(x = Final_train$Longitude, y = Final_train$Latitude) ,label = rownames(Final_train), nudge_x = c(0,0,0,0,0), nudge_y = c(0.075,0.1,-0.06,-0.06,0.08), size = 3, fontface = 2, color = c("white","white","black","black","white"))
 
 Depart
 ```
@@ -245,7 +245,7 @@ Arrivee <- carte +
         plot.caption = element_text(size = 8, face = "italic", hjust = 1)) + 
   guides(size = guide_legend(keyheight = unit(1, "cm"), keywidth = unit(1, "cm"), ncol = 3, title.position = "left",
                              title.hjust = 0.5, label.position = "left", label.hjust = 0.5, hjust = 0.5)) +
-  geom_text(aes(x = Final_train$Longitude, y = Final_train$Latitude) ,label = rownames(Final_train), nudge_x = 0, nudge_y = c(-0.08,-0.08,-0.06,-0.06,0.08), fontface = 2, color = c("white","white","black","black","white"))
+  geom_text(aes(x = Final_train$Longitude, y = Final_train$Latitude) ,label = rownames(Final_train), nudge_x = c(0,0,0,0,0), nudge_y = c(0.075,0.1,-0.06,-0.06,0.08), size = 3, fontface = 2, color = c("white","white","black","black","white"))
 
 Arrivee
 
@@ -366,14 +366,14 @@ Column {.tabset .tabset-fade}
 
 ### En gare de départ
 
-```{r, out.width="100%"}
-Depart + theme(legend.position = "right")
+```{r}
+Depart
 ```
 
 
 ### En gare d'arrivée
 ```{r}
-Arrivee + theme(legend.position = "right")
+Arrivee 
 ```
 
 
