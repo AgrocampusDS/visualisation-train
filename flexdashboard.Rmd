@@ -72,10 +72,10 @@ coord <- read_delim("data/Coordonnees.csv", delim = ";", escape_double = FALSE,
 train <- train %>% 
   mutate(
     Nb_circulations = `Number of expected circulations`-`Number of cancelled trains`,
-    # % of late trains (on arrival)
-    Percent_trains_late_arr = `Number of trains late on arrival`/Nb_circulations,
-    # % of late trains (at departure)
-    Percent_trains_late_dep = `Number of late trains at departure`/Nb_circulations,
+    # late trains (on arrival)
+    Late_arr_total = `Number of trains late on arrival`,
+    # %late trains (at departure)
+    Late_dep_total = `Number of late trains at departure`,
     # Season from month
     Season = case_when(Month %in% 2:4 ~ "A",
                        Month %in% 5:7 ~ "B",
@@ -265,23 +265,30 @@ df_dep <- train %>%
   filter(str_detect(`Departure station`, "PARIS")) %>% 
   left_join(coord, by = c("Arrival station" = "Departure station")) %>% 
   group_by(Season, Direction) %>% 
-  summarise(Retards = mean(Percent_trains_late_dep, na.rm = TRUE))
+  summarise(Nb_retards = sum(`Number of late trains at departure`, na.rm = TRUE)) %>% 
+  group_by(Direction) %>% 
+  mutate(Nb_retards_total = sum(Nb_retards, na.rm = TRUE))
+
+
 df_arr <- train %>% 
   filter(str_detect(`Departure station`, "PARIS")) %>% 
   left_join(coord, by = c("Arrival station" = "Departure station")) %>% 
   group_by(Season, Direction) %>% 
-  summarise(Retards = mean(Percent_trains_late_arr, na.rm = TRUE))
+    summarise(Nb_retards = sum(`Number of trains late on arrival`, na.rm = TRUE)) %>% 
+  group_by(Direction) %>% 
+  mutate(Nb_retards_total = sum(Nb_retards, na.rm = TRUE))
+
 df_dep_arr <- rbind(df_dep, df_arr)
 df_dep_arr$Gare <- as.factor(c(rep("Départ", 16),
                                rep("Arrivée", 16)))
 
 ggp1 <- df_dep_arr %>% 
   # diagramme en barres
-  ggplot() + aes(x = Season, y = Retards*100, fill = tolower(Direction)) +
+  ggplot() + aes(x = Season, y = (Nb_retards/Nb_retards_total)*100, fill = tolower(Direction)) +
   geom_bar(stat = "identity", position='dodge', width = 0.5) +
   scale_x_discrete(labels = season.name.fr) +
   ylab(element_blank()) + xlab(element_blank()) +
-  labs(title = "Trains en retard (en %)",
+  labs(title = "Saisonnalité des retards (en %)",
        caption = "Période : janvier 2015 à juin 2020") +
   theme(plot.title = element_text(size = 14, face = "bold.italic", hjust = 0.5),
         plot.caption = element_text(size = 8, face = "italic", hjust = 1),
