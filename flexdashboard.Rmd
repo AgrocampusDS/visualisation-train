@@ -237,7 +237,7 @@ Column {data-width=700}
 ### Évolution saisonnière des retards {data-height=400}
 
 ####
-```{r graph1, fig.height=3, fig.width=8, echo=FALSE, message=FALSE, warning=FALSE}
+```{r graph1, fig.height=3.2, fig.width=9, echo=FALSE, message=FALSE, warning=FALSE}
 # Évolution saisonnière des retards
 df_dep <- train %>% 
   filter(str_detect(`Departure station`, "PARIS")) %>% 
