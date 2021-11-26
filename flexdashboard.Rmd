@@ -201,8 +201,8 @@ Final_train$Longitude <- c(0.9,0.5,0.9,0.5,0.65)
 
 Depart <- carte + 
   geom_segment(aes(x = Final_train$Longitude[5], xend = Final_train$Longitude[-5], y = Final_train$Latitude[5], yend = Final_train$Latitude[-5], size = Final_train$Total[-5], color = Final_train$Percent_dep[-5]), lineend = "round", inherit.aes = FALSE, arrow = arrow(angle = 40)) +
-  scale_size_continuous(name = "Nombre total de trains", range = c(1,5), labels = c("200000","300000","400000","500000","600000")) +
-  labs(title = "Proportion de retard selon la zone géographique",color = "Trains en retard au départ (en %)", caption = "Période : janvier 2015 à juin 2020") +
+  scale_size_continuous(name = "Nombre total de trains", range = c(1,5), labels = c("200K","300K","400K","500K","600K")) +
+  labs(title = "Proportion de retards selon la zone géographique",color = "Trains en retard au départ (en %)", caption = "Période : janvier 2015 à juin 2020") +
   scale_color_gradient("Trains en retard au départ (en %)", high = "red", low = "orange")  +
   theme(panel.background = element_blank(), #On enlève le fond
         axis.title = element_blank(), #On enlève le titre des axes
@@ -228,8 +228,8 @@ Depart
 ```{r map2, echo=FALSE, message=FALSE, warning=FALSE}
 Arrivee <- carte + 
   geom_segment(aes(x = Final_train$Longitude[5], xend = Final_train$Longitude[-5], y = Final_train$Latitude[5], yend = Final_train$Latitude[-5], size = Final_train$Total[-5], color = Final_train$Percent[-5]), lineend = "round", inherit.aes = FALSE, arrow = arrow(angle = 40)) +
-  scale_size_continuous(name = "Nombre total de trains", range = c(1,5), labels = c("200000","300000","400000","500000","600000"))+
-  labs(title = "Proportion de retard selon la zone géographique", color = "Trains en retard à l'arrivée (en %)", caption = "Période : janvier 2015 à juin 2020" ) +
+  scale_size_continuous(name = "Nombre total de trains", range = c(1,5), labels = c("200K","300K","400K","500K","600K"))+
+  labs(title = "Proportion de retards selon la zone géographique", color = "Trains en retard à l'arrivée (en %)", caption = "Période : janvier 2015 à juin 2020" ) +
   scale_color_gradient("Trains en retard à l'arrivée (en %)", high = "red", low = "orange")  +
   theme(panel.background = element_blank(), #On enlève le fond
         axis.title = element_blank(), #On enlève le titre des axes
@@ -357,19 +357,60 @@ ggp2 <- df_graph2 %>%
 ggp2
 ```
 
+
+
+# France métropolitaine {.tabset .tabset-fade}
+
+Column {.tabset .tabset-fade}
+-----------------------------------------------------------------------
+
+### En gare de départ
+
+```{r, out.width="100%"}
+Depart + theme(legend.position = "right")
+```
+
+
+### En gare d'arrivée
+```{r}
+Arrivee + theme(legend.position = "right")
+```
+
+
+
+# Évolution selon les saisons 
+
+Column {.tabset .tabset-fade}
+-----------------------------------------------------------------------
+
+### Retards
+```{r}
+ggp1
+```
+
+
+
+### Motifs des retards
+```{r, fig.width=12}
+ggp2
+```
+
+
+
+
+
 # Annexe
 
-## Table des effectifs
+## Table des effectifs par zone
 ```{r echo=FALSE}
 train %>% 
   filter(str_detect(`Departure station`, "PARIS")) %>%
   left_join(coord, by = c("Arrival station" = "Departure station")) %>%
   group_by(Direction) %>% 
-  summarise(`Nombre total de trains` = sum(Nb_circulations, na.rm = TRUE),
+  summarise(`Nombre de liaisons` = n(),
+            `Nombre total de trains` = sum(Nb_circulations, na.rm = TRUE),
             `Nombre de trains en retards à l'arrivée` = 
               sum(`Number of trains late on arrival`, na.rm = TRUE),
             `Nombre de trains en retards à l'arrivée` = 
               sum(`Number of late trains at departure`, na.rm = TRUE))
 ```
-
-
