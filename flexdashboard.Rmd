@@ -288,7 +288,7 @@ ggp1 <- df_dep_arr %>%
   geom_bar(stat = "identity", position='dodge', width = 0.5) +
   scale_x_discrete(labels = season.name.fr) +
   ylab(element_blank()) + xlab(element_blank()) +
-  labs(title = "Saisonnalité des retards (en %)",
+  labs(title = "Répartition saisonnière des retards (en %)",
        caption = "Période : janvier 2015 à juin 2020") +
   theme(plot.title = element_text(size = 14, face = "bold.italic", hjust = 0.5),
         plot.caption = element_text(size = 8, face = "italic", hjust = 1),
@@ -348,7 +348,7 @@ ggp2 <- df_graph2 %>%
   scale_x_discrete(labels = season.name.fr) +
   # scale_y_continuous(labels = c(0, 100, 200, 300)) +
   ylab(element_blank()) + xlab(element_blank()) +
-  labs(title = "Causes des retards (en %)",
+  labs(title = "Répartition des causes des retards (en %)",
        caption = "Période : janvier 2015 à juin 2020") +
   theme(plot.title = element_text(size = 14, face = "bold.italic", hjust = 0.5),
         plot.caption = element_text(size = 8, face = "italic", hjust = 1),
@@ -408,16 +408,27 @@ ggp2 + theme(strip.text = element_text(size=11))
 
 # Annexe
 
-## Table des effectifs par zone
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+Tables des effectifs totaux par zone
 ```{r echo=FALSE}
 train %>% 
   filter(str_detect(`Departure station`, "PARIS")) %>%
   left_join(coord, by = c("Arrival station" = "Departure station")) %>%
   group_by(Direction) %>% 
   summarise(`Nombre de liaisons` = n(),
-            `Nombre total de trains` = sum(Nb_circulations, na.rm = TRUE),
-            `Nombre de trains en retards à l'arrivée` = 
+            `Nombre total de trains` = sum(Nb_circulations, na.rm = TRUE))
+```
+
+Tables des retards par zone
+```{r echo=FALSE}
+train %>% 
+  filter(str_detect(`Departure station`, "PARIS")) %>%
+  left_join(coord, by = c("Arrival station" = "Departure station")) %>%
+  group_by(Direction) %>% 
+  summarise(`Nombre de trains en retards à l'arrivée` = 
               sum(`Number of trains late on arrival`, na.rm = TRUE),
-            `Nombre de trains en retards à l'arrivée` = 
+            `Nombre de trains en retards au départ` = 
               sum(`Number of late trains at departure`, na.rm = TRUE))
 ```
