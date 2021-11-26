@@ -432,3 +432,6 @@ train %>%
             `Nombre de trains en retards au départ` = 
               sum(`Number of late trains at departure`, na.rm = TRUE))
 ```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
