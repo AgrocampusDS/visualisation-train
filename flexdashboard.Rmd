@@ -201,14 +201,24 @@ Final_train$Longitude <- c(0.9,0.5,0.9,0.5,0.65)
 
 Depart <- carte + 
   geom_segment(aes(x = Final_train$Longitude[5], xend = Final_train$Longitude[-5], y = Final_train$Latitude[5], yend = Final_train$Latitude[-5], size = Final_train$Total[-5], color = Final_train$Percent_dep[-5]), lineend = "round", inherit.aes = FALSE, arrow = arrow(angle = 50)) +
-  scale_size(range = c(1,5))+
-  labs(color = "Trains en retard au départ (en %)") +
+  scale_size_continuous(name = "Nombre total de trains", range = c(1,5), labels = c("200000 trains","300000 trains","400000 trains","500000 trains","600000 trains")) +
+  labs(title = "Proportion de retard selon le secteur Géographique",color = "Trains en retard au départ (en %)", caption = "Période : janvier 2015 à juin 2020") +
   scale_color_gradient("Trains en retard au départ (en %)", high = "darkblue", low = "cyan")  +
   theme(panel.background = element_blank(), #On enlève le fond
         axis.title = element_blank(), #On enlève le titre des axes
         axis.ticks = element_blank(), #On enlève les graduations
-        axis.text = element_blank()) +#On enlève le texte des axes 
-  geom_text(aes(x = Final_train$Longitude, y = Final_train$Latitude) ,label = rownames(Final_train), nudge_x = 0, nudge_y = c(-0.05,-0.05,-0.03,-0.03,0.02), fontface = 2, color = c("white","white","black","black","black"))
+        axis.text = element_blank(), #On enlève le texte des axes
+        legend.key.size = unit(0.8,"cm"),
+        legend.title = element_text(size = 10, face = "italic"),
+        plot.title = element_text(size = 14, face = "bold.italic", hjust = 0.5),
+        legend.box = "vertical",
+        legend.position = "bottom",
+        legend.margin=margin(),
+        legend.justification = "center",
+        plot.caption = element_text(size = 8, face = "italic", hjust = 1)) + 
+  guides(size = guide_legend(keyheight = unit(1, "cm"), keywidth = unit(1, "cm"), ncol = 3, title.position = "left",
+                             title.hjust = 0.5, label.position = "left", label.hjust = 0.5, hjust = 0.5)) +
+  geom_text(aes(x = Final_train$Longitude, y = Final_train$Latitude) ,label = rownames(Final_train), nudge_x = 0, nudge_y = c(-0.08,-0.08,-0.06,-0.06,0.08), fontface = 2, color = c("white","white","black","black","white"))
 
 Depart
 ```
@@ -218,14 +228,24 @@ Depart
 ```{r map2, echo=FALSE, message=FALSE, warning=FALSE}
 Arrivee <- carte + 
   geom_segment(aes(x = Final_train$Longitude[5], xend = Final_train$Longitude[-5], y = Final_train$Latitude[5], yend = Final_train$Latitude[-5], size = Final_train$Total[-5], color = Final_train$Percent[-5]), lineend = "round", inherit.aes = FALSE, arrow = arrow(angle = 50)) +
-  scale_size(range = c(1,5), guide = "none")+
-  labs(color = "Trains en retard à l'arrivée (en %)") +
+  scale_size_continuous(name = "Nombre total de trains", range = c(1,5), labels = c("200000 trains","300000 trains","400000 trains","500000 trains","600000 trains"))+
+  labs(title = "Proportion de retard selon le secteur Géographique", color = "Trains en retard à l'arrivée (en %)", caption = "Période : janvier 2015 à juin 2020" ) +
   scale_color_gradient("Trains en retard à l'arrivée (en %)", high = "darkblue", low = "cyan")  +
   theme(panel.background = element_blank(), #On enlève le fond
         axis.title = element_blank(), #On enlève le titre des axes
         axis.ticks = element_blank(), #On enlève les graduations
-        axis.text = element_blank()) +#On enlève le texte des axes 
-  geom_text(aes(x = Final_train$Longitude, y = Final_train$Latitude) ,label = rownames(Final_train), nudge_x = 0, nudge_y = c(-0.05,-0.05,-0.03,-0.03,0.02), fontface = 2, color = c("white","white","black","black","black"))
+        axis.text = element_blank(), #On enlève le texte des axes
+        legend.key.size = unit(0.8,"cm"),
+        legend.title = element_text(size = 10, face = "italic"),
+        plot.title = element_text(size = 14, face = "bold.italic", hjust = 0.5),
+        legend.box = "vertical",
+        legend.position = "bottom",
+        legend.margin=margin(),
+        legend.justification = "center",
+        plot.caption = element_text(size = 8, face = "italic", hjust = 1)) + 
+  guides(size = guide_legend(keyheight = unit(1, "cm"), keywidth = unit(1, "cm"), ncol = 3, title.position = "left",
+                             title.hjust = 0.5, label.position = "left", label.hjust = 0.5, hjust = 0.5)) +
+  geom_text(aes(x = Final_train$Longitude, y = Final_train$Latitude) ,label = rownames(Final_train), nudge_x = 0, nudge_y = c(-0.08,-0.08,-0.06,-0.06,0.08), fontface = 2, color = c("white","white","black","black","white"))
 
 Arrivee
 
